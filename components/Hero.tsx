@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 export default function Hero({
   brand,
@@ -8,13 +8,28 @@ export default function Hero({
   brand: { primary: string; dark: string };
 }) {
   const reduce = useReducedMotion();
-  const fadeInUp = {
+
+  const fadeInUp: Variants = {
     hidden: { opacity: 0, y: reduce ? 0 : 12 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        // Framer Motion v12 typing: use a cubic-bezier tuple or an easing function
+        ease: [0.16, 1, 0.3, 1], // ≈ easeOut
+      },
+    },
   };
-  const stagger = {
+
+  const stagger: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.08 } },
+    show: {
+      transition: {
+        delayChildren: 0.04,
+        staggerChildren: 0.08,
+      },
+    },
   };
 
   return (
@@ -27,6 +42,7 @@ export default function Hero({
             "radial-gradient(1200px 600px at 10% 10%, rgba(0,229,142,0.18), transparent 60%), radial-gradient(1000px 600px at 90% 10%, rgba(0,126,108,0.14), transparent 60%)",
         }}
       />
+
       <div className="mx-auto max-w-7xl px-6 py-20 text-center md:py-28">
         <motion.h1
           id="hero-title"
@@ -36,7 +52,12 @@ export default function Hero({
           animate="show"
         >
           Digitala kvitton.{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-700">
+          <span
+            className="text-transparent bg-clip-text"
+            style={{
+              backgroundImage: `linear-gradient(90deg, ${brand.primary}, ${brand.dark})`,
+            }}
+          >
             Enkelt. Säkert. Hållbart.
           </span>
         </motion.h1>
@@ -66,6 +87,7 @@ export default function Hero({
           >
             Läs mer
           </motion.a>
+
           <motion.a
             href="#contact"
             className="rounded-xl bg-emerald-400 px-6 py-3 font-bold text-emerald-900 shadow-md hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -78,10 +100,10 @@ export default function Hero({
 
         <motion.div
           className="mx-auto mt-10 grid max-w-4xl grid-cols-2 items-center gap-6 opacity-80 md:grid-cols-4"
+          variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          transition={{ staggerChildren: 0.08 }}
         >
           {["Retail", "Café", "Gym", "Event"].map((tag) => (
             <motion.div
