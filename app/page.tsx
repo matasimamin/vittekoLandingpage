@@ -6,8 +6,16 @@ import Stats from "@/components/Stats";
 import FAQ from "@/components/FAQ";
 import ContactForm from "@/components/ContactForm";
 import { brand } from "@/lib/constants";
+import https from "https";
 
-export default function HomePage() {
+export default async function HomePage() {
+ 
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  //const req = await fetch("https://localhost:7130/weatherforecast/");
+
+  //const data = await req.json();
+  //const headerText = data[0]?.summary ?? "Ingen data";
+
   return (
     <div className="min-h-screen font-sans bg-white text-gray-800 selection:bg-emerald-200/60">
       {/* Skip link */}
