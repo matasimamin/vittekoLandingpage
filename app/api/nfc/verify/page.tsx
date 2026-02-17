@@ -11,17 +11,24 @@ type ApiItem = {
 
 async function getReceipt(e: string): Promise<ApiItem[] | null> {
   try {
-    const res = await fetch(`https://localhost:7130/api/nfc/verify?e=${e}`, {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // dev only
+    const res = await fetch(`https://87.227.41.219:6767/api/nfc/verify?e=${encodeURIComponent(e)}`, {
       cache: "no-store",
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Fetch failed:", res.status, res.statusText, text);
+      return null;
+    }
 
     return await res.json();
-  } catch {
+  } catch (err) {
+    console.error("Fetch exception:", err);
     return null;
   }
 }
+
 
 export default async function VerifyPage(props: {
   searchParams: Promise<{ e?: string }>;
@@ -34,8 +41,10 @@ export default async function VerifyPage(props: {
   }
 
   const items = await getReceipt(encryptedValue);
+console.log(items);
 
   if (!items) {
+    throw new Error("API not reachable");
     return (
       <div className="min-h-screen bg-white text-gray-800 font-sans">
         <NavBar brand={brand} />
@@ -47,6 +56,7 @@ export default async function VerifyPage(props: {
           </div>
         </main>
       </div>
+      
     );
   }
 
