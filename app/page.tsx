@@ -9,7 +9,6 @@ import { brand } from "@/lib/constants";
 import https from "https";
 
 export default async function HomePage() {
- 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   //const req = await fetch("https://localhost:7130/weatherforecast/");
 
@@ -76,8 +75,11 @@ export default async function HomePage() {
       <footer className="border-t border-gray-200 bg-white py-8 text-gray-600">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 md:flex-row">
           <p>
-            © {new Date().getFullYear()} Vitteko. Alla rättigheter förbehållna.
+            © {new Date().getFullYear()} Vitteko AB. Alla rättigheter
+            förbehållna.
           </p>
+
+          <p> Org-nr: 559571-1515</p>
           <div className="flex gap-6 text-sm">
             <a href="#faq" className="hover:text-gray-900">
               Integritet
