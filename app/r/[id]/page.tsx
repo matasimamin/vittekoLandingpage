@@ -9,12 +9,13 @@ type ApiItem = {
   Quantity: number;
 };
 
-async function getReceipt(e: string): Promise<ApiItem[] | null> {
+async function getReceipt(id: string): Promise<ApiItem[] | null> {
   try {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // dev only
-    const res = await fetch(`https://87.227.41.219:6767/api/nfc/verify?e=${encodeURIComponent(e)}`, {
-      cache: "no-store",
-    });
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    const res = await fetch(
+      `https://api.vitteko.se/r/${encodeURIComponent(id)}`,
+      { cache: "no-store" }
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -29,35 +30,19 @@ async function getReceipt(e: string): Promise<ApiItem[] | null> {
   }
 }
 
-
-export default async function VerifyPage(props: {
-  searchParams: Promise<{ e?: string }>;
+export default async function ReceiptPage(props: {
+  params: Promise<{ id: string }>;
 }) {
-  const searchParams = await props.searchParams;
-  const encryptedValue = searchParams.e;
+  const { id } = await props.params;
 
-  if (!encryptedValue) {
+  if (!id) {
     notFound();
   }
 
-  const items = await getReceipt(encryptedValue);
-console.log(items);
+  const items = await getReceipt(id);
 
   if (!items) {
     throw new Error("API not reachable");
-    return (
-      <div className="min-h-screen bg-white text-gray-800 font-sans">
-        <NavBar brand={brand} />
-        <main className="mx-auto max-w-3xl px-6 py-16">
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
-            <h1 className="text-2xl font-bold text-red-700">
-              Kvitto kunde inte verifieras
-            </h1>
-          </div>
-        </main>
-      </div>
-      
-    );
   }
 
   const total = items.reduce(
@@ -71,7 +56,6 @@ console.log(items);
 
       <main className="mx-auto max-w-3xl px-6 py-16 md:py-20">
         <div className="rounded-3xl border border-emerald-100 bg-white p-8 shadow-sm">
-          {/* Header */}
           <div className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
               <span className="text-xl text-emerald-700">✓</span>
@@ -86,7 +70,6 @@ console.log(items);
             </p>
           </div>
 
-          {/* Items */}
           <div className="mt-10 border-t border-gray-200 pt-6 space-y-4">
             {items.map((item, index) => (
               <div
@@ -107,7 +90,6 @@ console.log(items);
             ))}
           </div>
 
-          {/* Total */}
           <div className="mt-8 border-t border-gray-200 pt-6 text-right">
             <p className="text-sm text-gray-500">Totalt</p>
             <p className="text-2xl font-bold text-emerald-700">
@@ -115,17 +97,15 @@ console.log(items);
             </p>
           </div>
 
-          {/* Footer */}
           <div className="mt-6 text-center text-xs text-gray-400">
-            Verifieringskod: {encryptedValue}
+            Verifieringskod: {id}
           </div>
 
-<DownloadReceiptButton
-  items={items}
-  total={total}
-  verificationCode={encryptedValue}
-/>
-
+          <DownloadReceiptButton
+            items={items}
+            total={total}
+            verificationCode={id}
+          />
         </div>
       </main>
     </div>
