@@ -42,7 +42,7 @@ export default async function ReceiptPage(props: {
   const items = await getReceipt(id);
 
   if (!items) {
-    throw new Error("API not reachable");
+    notFound();
   }
 
   const total = items.reduce(
