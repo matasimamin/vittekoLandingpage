@@ -5,13 +5,19 @@ import DownloadReceiptButton from "@/components/DownloadReceiptButton";
 
 type ApiItem = {
   Name: string;
-  Price: number;
+  UnitPrice: number;
   Quantity: number;
+};
+
+type ReceiptResponse = {
+  Items: ApiItem[];
+  Currency: string;
+  PaymentMethod: string;
+  Note?: string;
 };
 
 async function getReceipt(id: string): Promise<ApiItem[] | null> {
   try {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
     const res = await fetch(
       `https://api.vitteko.se/r/${encodeURIComponent(id)}`,
       { cache: "no-store" }
@@ -23,7 +29,8 @@ async function getReceipt(id: string): Promise<ApiItem[] | null> {
       return null;
     }
 
-    return await res.json();
+    const receipt = (await res.json()) as ReceiptResponse;
+    return receipt.Items;
   } catch (err) {
     console.error("Fetch exception:", err);
     return null;
@@ -46,7 +53,7 @@ export default async function ReceiptPage(props: {
   }
 
   const total = items.reduce(
-    (sum, item) => sum + item.Price * item.Quantity,
+    (sum, item) => sum + item.UnitPrice * item.Quantity,
     0
   );
 
@@ -79,12 +86,12 @@ export default async function ReceiptPage(props: {
                 <div>
                   <p className="font-medium">{item.Name}</p>
                   <p className="text-gray-500">
-                    {item.Quantity} × {item.Price.toFixed(2)} kr
+                    {item.Quantity} × {item.UnitPrice.toFixed(2)} kr
                   </p>
                 </div>
 
                 <div className="font-semibold">
-                  {(item.Price * item.Quantity).toFixed(2)} kr
+                  {(item.UnitPrice * item.Quantity).toFixed(2)} kr
                 </div>
               </div>
             ))}

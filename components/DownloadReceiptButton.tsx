@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 
 type ApiItem = {
   Name: string;
-  Price: number;
+  UnitPrice: number;
   Quantity: number;
 };
 
@@ -39,10 +39,10 @@ export default function DownloadReceiptButton({
 
     // Items
     items.forEach((item) => {
-      const rowTotal = item.Price * item.Quantity;
+      const rowTotal = item.UnitPrice * item.Quantity;
 
       doc.text(
-        `${item.Name} (${item.Quantity} × ${item.Price.toFixed(2)} kr)`,
+        `${item.Name} (${item.Quantity} × ${item.UnitPrice.toFixed(2)} kr)`,
         20,
         y
       );
