@@ -16,10 +16,10 @@ type ReceiptResponse = {
   Note?: string;
 };
 
-async function getReceipt(id: string): Promise<ApiItem[] | null> {
+async function getReceipt(vendorId: string, token: string): Promise<ApiItem[] | null> {
   try {
     const res = await fetch(
-      `https://api.vitteko.se/r/${encodeURIComponent(id)}`,
+      `https://api.vitteko.se/r/${encodeURIComponent(vendorId)}/${encodeURIComponent(token)}`,
       { cache: "no-store" }
     );
 
@@ -38,15 +38,15 @@ async function getReceipt(id: string): Promise<ApiItem[] | null> {
 }
 
 export default async function ReceiptPage(props: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ vendorId: string; token: string }>;
 }) {
-  const { id } = await props.params;
+  const { vendorId, token } = await props.params;
 
-  if (!id) {
+  if (!vendorId || !token) {
     notFound();
   }
 
-  const items = await getReceipt(id);
+  const items = await getReceipt(vendorId, token);
 
   if (!items) {
     notFound();
@@ -105,13 +105,13 @@ export default async function ReceiptPage(props: {
           </div>
 
           <div className="mt-4 sm:mt-6 text-center text-[11px] sm:text-xs text-gray-400 break-all">
-            Verifieringskod: {id}
+            Verifieringskod: {token}
           </div>
 
           <DownloadReceiptButton
             items={items}
             total={total}
-            verificationCode={id}
+            verificationCode={token}
           />
         </div>
       </main>
