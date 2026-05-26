@@ -188,16 +188,29 @@ function Accordion({
   title,
   badge,
   defaultOpen = false,
+  forceOpen,
+  onForceOpenConsumed,
+  id,
   children,
 }: {
   title: string;
   badge?: React.ReactNode;
   defaultOpen?: boolean;
+  forceOpen?: boolean;
+  onForceOpenConsumed?: () => void;
+  id?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (forceOpen) {
+      setOpen(true);
+      onForceOpenConsumed?.();
+    }
+  }, [forceOpen, onForceOpenConsumed]);
   return (
-    <div className="border-b border-gray-200 first:border-t">
+    <div id={id} className="border-b border-gray-200 first:border-t">
       <button
         className="group flex w-full items-center gap-3 px-1 py-[18px] text-left text-emerald-900 hover:text-gray-900"
         onClick={() => setOpen((o) => !o)}
@@ -389,6 +402,17 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const [sendModal, setSendModal] = useState<"email" | "sms" | null>(null);
+  const [varorForceOpen, setVarorForceOpen] = useState(false);
+
+  const scrollToVaror = useCallback(() => {
+    setVarorForceOpen(true);
+    const el = document.getElementById("acc-varor");
+    if (el) {
+      const navHeight = 60;
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -619,9 +643,11 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
           </span>
 
           {/* Scroll hint — double chevron */}
-          <span
-            className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 inline-flex leading-[0] text-emerald-700 opacity-55"
-            aria-hidden="true"
+          <button
+            type="button"
+            onClick={scrollToVaror}
+            className="absolute bottom-2.5 left-1/2 -translate-x-1/2 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0 leading-[0] text-emerald-700 opacity-55 transition-opacity hover:opacity-90"
+            aria-label="Visa varor"
           >
             <svg
               width="22"
@@ -637,15 +663,18 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
               <polyline points="6 9 12 15 18 9" className="hero-chev hero-chev-1" />
               <polyline points="6 15 12 21 18 15" className="hero-chev hero-chev-2" />
             </svg>
-          </span>
+          </button>
         </section>
 
         {/* ── Accordion sections ─────────────────────────────── */}
         <div className="flex flex-col">
           {/* Items (dynamic) */}
           <Accordion
+            id="acc-varor"
             title={`Varor · ${receipt.Items.length} st · ${fmt(totals.gross)}`}
             defaultOpen
+            forceOpen={varorForceOpen}
+            onForceOpenConsumed={() => setVarorForceOpen(false)}
           >
             <ul className="flex flex-col">
               {receipt.Items.map((item, i) => {

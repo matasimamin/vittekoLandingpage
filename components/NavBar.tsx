@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 
 export default function NavBar({
   brand,
+  hideCta = false,
 }: {
   brand: { primary: string; dark: string };
+  hideCta?: boolean;
 }) {
   const [elevated, setElevated] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -61,12 +63,14 @@ export default function NavBar({
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="#contact"
-            className="rounded-xl border border-emerald-300/60 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          >
-            Boka demo
-          </Link>
+          {!hideCta && (
+            <Link
+              href="#contact"
+              className="rounded-xl border border-emerald-300/60 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              Boka demo
+            </Link>
+          )}
 
           <button
             type="button"
