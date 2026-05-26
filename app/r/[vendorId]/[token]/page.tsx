@@ -3,6 +3,8 @@ import { brand } from "@/lib/constants";
 import { notFound } from "next/navigation";
 import ReceiptView from "@/components/receipt/ReceiptView";
 import ReceiptEmptyState from "@/components/receipt/ReceiptEmptyState";
+import ReceiptLoadingState from "@/components/receipt/ReceiptLoadingState";
+import ReceiptSentState from "@/components/receipt/ReceiptSentState";
 
 type ApiItem = {
   Name: string;
@@ -60,13 +62,32 @@ export default async function ReceiptPage(props: {
   }
 
   const apiReceipt = await getReceipt(vendorId, token);
-  const receipt = apiReceipt ?? (process.env.NODE_ENV === "development" ? DEV_DEMO_RECEIPT : null);
+
+  const isDev = process.env.NODE_ENV === "development";
+  const devState =
+    isDev && !apiReceipt
+      ? token.length === 48
+        ? "loaded"
+        : token.length === 49
+          ? "loading"
+          : token.length === 50
+            ? "sent"
+            : "empty"
+      : null;
+
+  const receipt = apiReceipt ?? (isDev && (devState === "loaded" || devState === null) ? DEV_DEMO_RECEIPT : null);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
-      <NavBar brand={brand} />
+      <NavBar brand={brand} hideCta />
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10 lg:py-12">
-        {receipt ? (
+        {devState === "loading" ? (
+          <ReceiptLoadingState />
+        ) : devState === "sent" ? (
+          <ReceiptSentState token={token} />
+        ) : devState === "empty" ? (
+          <ReceiptEmptyState token={token} />
+        ) : receipt ? (
           <ReceiptView receipt={receipt} token={token} vendorId={vendorId} />
         ) : (
           <ReceiptEmptyState token={token} />
