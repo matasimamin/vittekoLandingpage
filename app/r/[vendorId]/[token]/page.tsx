@@ -17,6 +17,19 @@ type ReceiptResponse = {
   Note?: string;
 };
 
+const DEV_DEMO_RECEIPT: ReceiptResponse = {
+  Items: [
+    { Name: "Cappuccino, stor", UnitPrice: 49, Quantity: 2 },
+    { Name: "Kanelbulle", UnitPrice: 39, Quantity: 2 },
+    { Name: "Smörgås, lax & avokado", UnitPrice: 89, Quantity: 1 },
+    { Name: "Mineralvatten 33 cl", UnitPrice: 29, Quantity: 1 },
+    { Name: "Tygkasse — återbruk", UnitPrice: 25, Quantity: 1 },
+  ],
+  Currency: "SEK",
+  PaymentMethod: "Kontaktlös betalning",
+  Note: "Du har 6 stämplar kvar till en gratis kaffe. Visa kvittot i kassan för att samla.",
+};
+
 async function getReceipt(vendorId: string, token: string): Promise<ReceiptResponse | null> {
   try {
     const res = await fetch(
@@ -46,7 +59,8 @@ export default async function ReceiptPage(props: {
     notFound();
   }
 
-  const receipt = await getReceipt(vendorId, token);
+  const apiReceipt = await getReceipt(vendorId, token);
+  const receipt = apiReceipt ?? (process.env.NODE_ENV === "development" ? DEV_DEMO_RECEIPT : null);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">

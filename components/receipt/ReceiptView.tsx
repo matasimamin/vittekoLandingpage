@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { jsPDF } from "jspdf";
 
 type ApiItem = {
@@ -102,6 +102,23 @@ function IconCheck() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function IconMail() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <polyline points="3 7 12 13 21 7" />
+    </svg>
+  );
+}
+
+function IconSms() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );
 }
@@ -236,7 +253,7 @@ function Barcode({ w = 240, h = 44, label }: { w?: number; h?: number; label?: s
         ))}
       </svg>
       {label && (
-        <span className="font-mono text-[11px] tracking-[0.15em] text-gray-500">
+        <span className="max-w-full break-all text-center font-mono text-xs text-gray-500">
           {label}
         </span>
       )}
@@ -259,11 +276,119 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
   );
 }
 
+// ── Icons (modal) ──────────────────────────────────────────────────
+
+function IconClose() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="6" y1="18" x2="18" y2="6" />
+    </svg>
+  );
+}
+
+// ── Send Modal ─────────────────────────────────────────────────────
+
+function SendModal({
+  kind,
+  onClose,
+  onSent,
+}: {
+  kind: "email" | "sms";
+  onClose: () => void;
+  onSent: (value: string) => void;
+}) {
+  const isEmail = kind === "email";
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }, []);
+
+  const valid = isEmail
+    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+    : /^[+0-9\s-]{6,}$/.test(value);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!valid) return;
+    setBusy(true);
+    // TODO: hit backend API to actually send
+    setTimeout(() => {
+      setBusy(false);
+      onSent(value);
+    }, 700);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm animate-[fade-in_0.18s_cubic-bezier(0.16,1,0.3,1)]"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-[420px] rounded-[20px] bg-white p-7 shadow-lg animate-[modal-in_0.25s_cubic-bezier(0.16,1,0.3,1)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute right-3.5 top-3.5 inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+          onClick={onClose}
+          aria-label="Stäng"
+        >
+          <IconClose />
+        </button>
+
+        <div className="mb-3.5 inline-flex h-12 w-12 items-center justify-center rounded-[14px] border border-emerald-100 bg-emerald-50 text-emerald-700">
+          {isEmail ? <IconMail /> : <IconSms />}
+        </div>
+
+        <h3 className="text-xl font-bold tracking-tight text-gray-900">
+          {isEmail ? "Skicka kvittot via e-post" : "Skicka kvittot via SMS"}
+        </h3>
+        <p className="mt-1.5 text-[13.5px] leading-snug text-gray-600">
+          {isEmail
+            ? "Vi skickar en kopia av kvittot som PDF till valfri adress."
+            : "Vi skickar en länk till kvittot via SMS. Standardtaxa kan tillkomma."}
+        </p>
+
+        <form onSubmit={submit} className="mt-[18px] flex flex-col gap-3">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-gray-600">
+              {isEmail ? "E-postadress" : "Telefonnummer"}
+            </span>
+            <input
+              ref={inputRef}
+              className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-3 text-[15px] text-gray-900 transition-[border-color,box-shadow] focus:border-emerald-400 focus:outline-none focus:ring-[3px] focus:ring-emerald-300/25"
+              type={isEmail ? "email" : "tel"}
+              inputMode={isEmail ? "email" : "tel"}
+              placeholder={isEmail ? "namn@exempel.se" : "+46 70 123 45 67"}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              required
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={!valid || busy}
+            className="mt-1.5 w-full rounded-xl bg-[#00e58e] py-3 text-sm font-bold text-emerald-900 shadow-[0_4px_10px_rgba(0,229,142,0.25),0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-px hover:bg-emerald-300 hover:shadow-[0_6px_14px_rgba(0,229,142,0.32)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0"
+          >
+            {busy ? "Skickar…" : isEmail ? "Skicka e-post" : "Skicka SMS"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ──────────────────────────────────────────────────
 
 export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [sendModal, setSendModal] = useState<"email" | "sms" | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -463,13 +588,27 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
           </p>
 
           {/* Actions */}
-          <div className="mt-[18px] grid w-full grid-cols-1 gap-2">
+          <div className="mt-[18px] grid w-full grid-cols-3 gap-2">
             <button
               onClick={handlePdfDownload}
               className="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl bg-[#00e58e] px-2 py-3 text-[13px] font-bold text-emerald-900 shadow-[0_4px_10px_rgba(0,229,142,0.28),0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-px hover:bg-emerald-300 hover:shadow-[0_6px_14px_rgba(0,229,142,0.32)] active:translate-y-0"
             >
               <IconDownload />
-              <span>Ladda ner som PDF</span>
+              <span>PDF</span>
+            </button>
+            <button
+              onClick={() => setSendModal("email")}
+              className="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-3 text-[13px] font-semibold text-emerald-900 shadow-sm transition-all hover:-translate-y-px hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-md active:translate-y-0"
+            >
+              <IconMail />
+              <span>E-post</span>
+            </button>
+            <button
+              onClick={() => setSendModal("sms")}
+              className="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-3 text-[13px] font-semibold text-emerald-900 shadow-sm transition-all hover:-translate-y-px hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-md active:translate-y-0"
+            >
+              <IconSms />
+              <span>SMS</span>
             </button>
           </div>
 
@@ -477,6 +616,27 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
           <span className="mt-4 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-700">
             <IconLock />
             Verifierat via Vitteko
+          </span>
+
+          {/* Scroll hint — double chevron */}
+          <span
+            className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 inline-flex leading-[0] text-emerald-700 opacity-55"
+            aria-hidden="true"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="block overflow-visible"
+            >
+              <polyline points="6 9 12 15 18 9" className="hero-chev hero-chev-1" />
+              <polyline points="6 15 12 21 18 15" className="hero-chev hero-chev-2" />
+            </svg>
           </span>
         </section>
 
@@ -570,7 +730,7 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
         </div>
 
         {/* ── Barcode / verification ─────────────────────────── */}
-        <div className="mt-3 flex flex-col items-center gap-3 rounded-[20px] border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-3 flex w-full flex-col items-center gap-3 overflow-hidden rounded-[20px] border border-gray-200 bg-white p-6 shadow-sm">
           <Barcode w={280} h={56} label={token} />
           <p className="inline-flex items-center gap-1.5 text-[12.5px] text-gray-500">
             <IconLock />
@@ -579,12 +739,23 @@ export default function ReceiptView({ receipt, token }: ReceiptViewProps) {
               <span className="font-semibold text-emerald-800">Vitteko</span>
             </span>
           </p>
-          <div className="inline-flex items-center gap-2 font-mono text-xs text-gray-500">
-            <span className="break-all">{token}</span>
-            <CopyButton value={token} onToast={showToast} />
-          </div>
         </div>
       </div>
+
+      {sendModal && (
+        <SendModal
+          kind={sendModal}
+          onClose={() => setSendModal(null)}
+          onSent={(recipient) => {
+            setSendModal(null);
+            showToast(
+              sendModal === "email"
+                ? `Kvitto skickat till ${recipient}`
+                : `Kvitto skickat via SMS till ${recipient}`
+            );
+          }}
+        />
+      )}
     </>
   );
 }
